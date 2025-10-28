@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Morse</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+        
+        body {
+            padding: 8px;
+        }
+        
+        .content {
+            display: grid;
+            align-items: center;
+            grid: auto / repeat(4, 1fr);
+            justify-content: space-between;
+            grid-gap: 12px;
+        }
+        
+        .box {
+            border: 1px solid #ccc;
+            padding: 12px;
+            display: grid;
+            align-items: center;
+            grid: auto / repeat(2, 1fr);
+            justify-content: space-between;
+        }
+        
+        .box .l {
+            color: #f60;
+        }
+        
+        .box .r {
+            text-align: center;
+        }
+        
+        .turning {
+            border-top: 1px solid #f60;
+            margin-top: 20px;
+            position: relative;
+            display: none;
+        }
+        
+        .content2 {
+            word-break: break-word;
+        }
+        
+        #inp {
+            width: 100%;
+            height: 38px;
+            padding: 0 6px;
+            font-size: 14px;
+            outline: 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            color: #666;
+        }
+        
+        .wrap {
+            display: grid;
+            align-items: center;
+            grid: auto / 1fr 80px 80px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .wrap span {
+            color: #f60;
+            border: 1px solid #f60;
+            border-radius: 5px;
+            padding: 10px 12px;
+            font-size: 12px;
+            margin-left: 10px;
+            text-align: center;
+        }
+        
+        @media screen and (max-width: 600px) {}
+        
+        @media screen and (max-width: 900px) {}
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <input type="text" id="inp" />
+        <span id="copy">复制</span>
+        <span id="convert">转文字</span>
+    </div>
+    <div class="content"></div>
+    <div class="turning"></div>
+    <div class="content2"></div>
+    <script src="1.js"></script>
+    <script>
+        let morse = {
+            A: ".-",
+            B: "-...",
+            C: "-.-.",
+            D: "-..",
+            E: ".",
+            F: "..-.",
+            G: "--.",
+            H: "....",
+            I: "..",
+            J: ".---",
+            K: "-.-",
+            L: ".-..",
+            M: "--",
+            N: "-.",
+            O: "---",
+            P: ".--.",
+            Q: "--.-",
+            R: ".-.",
+            S: "...",
+            T: "-",
+            U: "..-",
+            V: "...-",
+            W: ".--",
+            X: "-..-",
+            Y: "-.--",
+            Z: "--..",
+            0: "-----",
+            1: ".----",
+            2: "..---",
+            3: "...--",
+            4: "....-",
+            5: ".....",
+            6: "-....",
+            7: "--...",
+            8: "---..",
+            9: "----.",
+            ",": "--..--",
+            "?": "..--..",
+            "!": "..--.",
+            ":": "---...",
+            "/": "-..-.",
+            "()": "-.--.-",
+        };
+        window.onload = function() {
+            let inp = document.querySelector("#inp");
+            let copy = document.querySelector("#copy");
+            let content = document.querySelector(".content");
+            let content2 = document.querySelector(".content2");
+            let turning = document.querySelector(".turning");
+            let convert = document.querySelector("#convert");
+            inp.oninput = function(e) {
+                copy.innerHTML = "复制";
+                let value = e.target.value;
+
+                //全拼
+                var fullName = pinyin.getFullChars(value);
+                //获取简写拼音（调用js中方法）
+                var easyName = pinyin.getCamelChars(value);
+
+                let splitValue = fullName.split("");
+                let _html = [];
+                let _html2 = [];
+                splitValue.map(item => {
+                    let itemUp = item.toUpperCase();
+                    if (morse[itemUp]) {
+                        _html.push({
+                            key: itemUp,
+                            value: morse[itemUp],
+                        });
+                        _html2.push(morse[itemUp]);
+                    }
+                });
+                let _text = "";
+                _html.map(item => {
+                    _text += `
+                    <div class='box'>
+                        <div class="l">${item.key}：</div>
+                        <div class="r">${item.value}</div>
+                    </div>
+                    `;
+                });
+                content.innerHTML = _text;
+                content2.innerHTML = _html2.join("&nbsp;&nbsp;&nbsp;&nbsp;");
+                if (!value || !content2.innerHTML) {
+                    turning.style.display = "none";
+                } else {
+                    turning.style.display = "block";
+                }
+            };
+
+            function copyValue(v) {
+                const inputEle = document.createElement("input");
+                inputEle.setAttribute("readonly", "readonly"); // 防止手机上弹出软键盘
+                document.body.appendChild(inputEle);
+                inputEle.value = v;
+                inputEle.select();
+                const isOk = document.execCommand("Copy");
+                document.body.removeChild(inputEle);
+            }
+
+            copy.onclick = function() {
+                let re = new RegExp(/(&nbsp;){3}/, "g");
+                let ret = new RegExp(/(&nbsp;)/, "g");
+                let filterValue = content2.innerHTML.replace(re, "");
+                copyValue(filterValue.replace(ret, " "));
+                copy.innerHTML = "已复制";
+            };
+            convert.onclick = function() {
+                let arr = inp.value.split(/\s+/);
+                let morseConvert = [];
+                arr.map(item => {
+                    for (let m in morse) {
+                        if (item == morse[m]) {
+                            morseConvert.push(m);
+                        }
+                    }
+                });
+                if (morseConvert) {
+                    content2.innerHTML = morseConvert.join("&nbsp;");
+                }
+            };
+        };
+    </script>
+</body>
+
+</html>

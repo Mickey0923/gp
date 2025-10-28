@@ -1,0 +1,342 @@
+<!--
+ * @Description  :
+ * @Version      : 1.0
+ * @Author       : Mickey
+ * @Date         : 2024-01-12 16:16:04
+ * @LastEditors  : Mickey
+ * @LastEditTime : 2024-01-16 14:14:25
+ * @FilePath     : \\react-threed:\\Mickeys\\MY_Github\\dh\\index.html
+ * Copyright (C) 2024 Mickey. All rights reserved.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .content {
+            /* overflow: scroll;
+            width: 1200px; */
+        }
+
+        table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 1200px;
+            overflow: scroll;
+        }
+
+        th {
+            border-color: #666;
+            text-align: center;
+            height: 40px;
+            cursor: pointer;
+            user-select: none;
+            position: sticky;
+            z-index: 2;
+        }
+
+        td {
+            border-color: #666;
+            width: 75px;
+            text-align: center;
+        }
+
+        #myTable tr>th:first-child,
+        #myTable tr>td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background-color: #e7eadacc;
+            height: 30px;
+            border-bottom: none;
+            border-right: 1px solid #666;
+            width: 76px;
+            margin-top: -1px;
+        }
+
+        #myTable tr:nth-of-type(2) td:first-child {
+            /* border-top: none; */
+            margin-top: 0;
+        }
+
+        #myTable #thAdd {
+            height: 40px;
+        }
+
+        #myTable tr:last-child td:first-child {
+            border-bottom: 1px solid #666;
+        }
+
+        input {
+            width: 70px;
+            height: 24px;
+            margin: 2px 0;
+            display: list-item;
+            cursor: pointer;
+            position: relative;
+        }
+
+        input:hover:after {
+            content: attr(data-value);
+            position: absolute;
+            left: 0px;
+            margin: auto;
+            color: #de420a;
+        }
+
+        #total div {
+            color: #de420a;
+        }
+
+        .btn {
+            border: 1px solid #666;
+            padding: 6px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 30px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #de420a;
+            border-color: #de420a;
+            color: #fff;
+        }
+
+        #total {
+            width: 1200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <table border="1" id="myTable">
+            <thead>
+                <tr id="th">
+                    <th id="thAdd"></th>
+                    <!-- <th style="width:75pxlborder-left:none"></th> -->
+                </tr>
+            </thead>
+            <tr>
+                <!-- <td>1</td>
+                <td><input type="checkbox" name="sd" id=""></td>
+                <td><input type="checkbox" name="sd" id=""></td> -->
+            </tr>
+        </table>
+        <div id="total"></div>
+        <div class="btn">Clear</div>
+    </div>
+
+    <script>
+        const arr = [{
+            name: '速度',
+            value: 'sd'
+        }, {
+            name: '忽视仙法',
+            value: 'hsxf'
+        }, {
+            name: '忽视控制',
+            value: 'hskz'
+        }, {
+            name: '加强仙法',
+            value: 'jqxf'
+        }, {
+            name: '加强控制',
+            value: 'jqkz'
+        }, {
+            name: '法术命中',
+            value: 'fsmz'
+        }, {
+            name: '破防',
+            value: 'pf'
+        }, {
+            name: '攻击',
+            value: 'gj'
+        }, {
+            name: '气血',
+            value: 'qx'
+        }, {
+            name: '幻影',
+            value: 'shjs'
+        }, {
+            name: '伤害加深',
+            value: 'shjs'
+        }, {
+            name: '抗控制',
+            value: 'kkz'
+        }, {
+            name: '饮血',
+            value: 'yx'
+        }, {
+            name: '强力克',
+            value: 'qlk'
+        }, {
+            name: '天人五绝',
+            value: 'trwj'
+        }, {
+            name: '五雷轰顶',
+            value: 'wlhd'
+        }, {
+            name: '浩气凌霄',
+            value: 'hqlx'
+        }, {
+            name: '陌上开花',
+            value: 'mskh'
+        }, ]
+
+        const arrName = ['敏男龙', '力男龙', '女鬼', '老虎头', '低男人', '高男人', '力女龙', '愈女龙', '男鬼', '女人', '男仙', '低女仙', '盘女魔', '高女仙', '逆天魔', ]
+
+        window.onload = function() {
+            const table = document.getElementById('myTable');
+            const total = document.getElementById('total');
+            const thAdd = document.getElementById('thAdd');
+
+            const iL = '<i>（</i>'
+            const iR = '<i data="last"> ）</i>'
+
+            arrName.forEach(list => {
+                const newRow = document.getElementById('th');
+                const newCell1 = document.createElement('th');
+                newCell1.textContent = list;
+                newCell1.onclick = () => {
+                    const totalDiv_ = document.querySelectorAll('div[data="' + list + '"]')
+                    totalDiv_.forEach(item => {
+                        const getDataName = item.getAttribute('data')
+                        if (getDataName == list) {
+                            const id = item.getElementsByTagName('i')
+                            const vd = item.getElementsByTagName('div')[0]
+                            if (id && id.length != 0) {
+                                if (id[id.length - 1].nextSibling != null) {
+                                    id[id.length - 1].insertAdjacentHTML('afterend', iL)
+                                    vd.insertAdjacentHTML('beforeend', iR)
+                                }
+                            } else {
+                                if (vd.children.length != 0) {
+                                    vd.insertAdjacentHTML('afterbegin', iL)
+                                    vd.insertAdjacentHTML('beforeend', iR)
+                                }
+                            }
+                        }
+                    })
+
+                }
+                newRow.appendChild(newCell1);
+
+                table.appendChild(newRow);
+
+                const div_ = document.createElement('div')
+                div_.style.display = 'flex';
+                div_.style.marginBottom = '5px'
+                div_.setAttribute('data', list);
+                const span1_ = document.createElement('span')
+                span1_.style.display = 'block';
+                span1_.style.width = '80px';
+                span1_.textContent = list;
+                const span2_ = document.createElement('span')
+                span2_.textContent = "："
+                const div2_ = document.createElement('div')
+                total.appendChild(div_).appendChild(span1_);
+                div_.appendChild(span2_);
+                div_.appendChild(div2_);
+
+            })
+
+
+
+            arr.forEach(item => {
+                const newRow = document.createElement('tr');
+                // 添加内容到新的 tr 元素
+                const newCell1 = document.createElement('td');
+                const newCell2 = document.createElement('td');
+                newCell1.textContent = item.name;
+                newCell2.style.width = '75px'
+                newRow.appendChild(newCell1);
+                // newRow.appendChild(newCell2);
+
+                arrName.map(list => {
+                    let newCell2 = document.createElement('td');
+                    const check = document.createElement('input')
+                    check.type = 'checkbox'
+                    check.name = item.value
+                    check.setAttribute('data', list)
+                    check.setAttribute('data-value', item.name)
+                    check.onclick = (e) => {
+                        const totalDiv_ = document.querySelectorAll('div[data="' + list + '"]');
+                        totalDiv_.forEach(v => {
+                            const getDataName = v.getAttribute('data')
+                            if (getDataName == list && check.checked) {
+                                const te = document.createElement('b')
+                                te.style.marginLeft = '10px'
+                                te.textContent = item.name
+                                te.setAttribute('data', item.name)
+                                v.getElementsByTagName('div')[0].appendChild(te)
+                            } else {
+                                const id = v.getElementsByTagName('i')
+                                const te = document.querySelector('b[data="' + item.name + '"]')
+                                const parent = te.parentNode;
+
+                                if (id && id.length != 0) {
+                                    for (let i = 0; i < id.length; i++) {
+                                        if (id[i].getAttribute('data') == 'last') {
+                                            const twoPrev = id[i].previousSibling.previousSibling;
+                                            if (twoPrev.tagName == 'I') {
+                                                // parent.removeChild(te)
+                                                parent.removeChild(id[i])
+                                                parent.removeChild(twoPrev)
+                                            }
+                                        } else {
+
+                                        }
+                                    }
+                                }
+                                parent.removeChild(te)
+
+                            }
+                        })
+                    }
+                    newCell2.appendChild(check)
+
+                    newRow.appendChild(newCell2);
+                })
+
+                table.appendChild(newRow);
+            })
+
+
+            const ClearBtn = document.querySelector('.btn');
+            const checkbox = document.querySelectorAll('input[type="checkbox"]');
+
+            ClearBtn.onclick = function() {
+                checkbox.forEach(item => {
+                    item.checked = false;
+
+                })
+                const b = total.querySelectorAll('b')
+                const i_ = total.querySelectorAll('i')
+                for (let i = 0; i < b.length; i++) {
+                    const parent = b[i].parentNode
+                    parent.removeChild(b[i])
+                }
+                for (let i = 0; i < i_.length; i++) {
+                    const parent = i_[i].parentNode
+                    parent.removeChild(i_[i])
+                }
+            }
+
+
+        }
+    </script>
+</body>
+
+</html>
