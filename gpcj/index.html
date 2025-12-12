@@ -5,7 +5,291 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>股票投资计算器</title>
         <!-- 使用系统字体，无需网络或启动服务 -->
-        <link rel="stylesheet" href="assets/styles.css" />
+        <!-- <link rel="stylesheet" href="assets/styles.css" /> -->
+        <style>
+            :root {
+                --bg: #0f172a;
+                --card: #111827;
+                --text: #e5e7eb;
+                --muted: #9ca3af;
+                --accent: #22c55e;
+                --accent-2: #3b82f6;
+                --danger: #ef4444;
+                --border: #1f2937;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                height: 100%;
+            }
+            body {
+                margin: 0;
+                font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Microsoft YaHei",
+                    sans-serif;
+                color: var(--text);
+                background: radial-gradient(1000px 600px at 10% 10%, #0b1020 0%, var(--bg) 60%), var(--bg);
+            }
+
+            .app-header {
+                padding: 24px 20px 8px;
+                text-align: center;
+            }
+            .app-header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+            .subtitle {
+                margin: 6px 0 0;
+                color: var(--muted);
+            }
+
+            .container {
+                max-width: 1080px;
+                margin: 0 auto;
+                padding: 20px;
+                display: grid;
+                grid-template-columns: repeat(12, 1fr);
+                gap: 20px;
+            }
+
+            .card {
+                grid-column: span 12;
+                background: linear-gradient(180deg, #0b1324 0%, var(--card) 100%);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 18px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            }
+            .card h2 {
+                margin: 0 0 14px;
+                font-size: 18px;
+            }
+            .card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .card-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            .form-row {
+                display: grid;
+                grid-template-columns: 160px 1fr;
+                gap: 14px;
+                align-items: center;
+                margin: 12px 0;
+            }
+            .input-wrap {
+                display: grid;
+                grid-template-rows: auto auto;
+            }
+            label {
+                color: var(--muted);
+            }
+            input[type="number"] {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: #0a0f1f;
+                color: var(--text);
+                outline: none;
+            }
+            input[type="number"]:focus {
+                border-color: #334155;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            }
+            .error {
+                margin-top: 6px;
+                color: var(--danger);
+                min-height: 18px;
+                font-size: 12px;
+            }
+
+            .actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 10px;
+            }
+            .btn {
+                appearance: none;
+                border: 1px solid var(--border);
+                background: #0a0f1f;
+                color: var(--text);
+                padding: 10px 14px;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+            .btn.primary {
+                background: var(--accent-2);
+                border-color: transparent;
+                color: white;
+            }
+            .btn.primary:hover {
+                filter: brightness(1.05);
+            }
+            .btn.danger-outline {
+                border-color: var(--danger);
+                color: #fecaca;
+                background: transparent;
+            }
+            .btn.danger {
+                background: var(--danger);
+                color: white;
+                border-color: transparent;
+            }
+            .btn:hover {
+                transform: translateY(-0.5px);
+            }
+
+            .results {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 14px;
+                margin-top: 18px;
+            }
+            .result-item {
+                border: 1px dashed #23304a;
+                border-radius: 12px;
+                padding: 12px;
+                background: #0a0f1f;
+            }
+            .result-item .label {
+                color: var(--muted);
+                font-size: 13px;
+            }
+            .result-item .value {
+                font-size: 20px;
+                font-weight: 700;
+                color: #a7f3d0;
+            }
+            .result-item.muted .value {
+                color: #cbd5e1;
+                font-weight: 600;
+            }
+            .result-item.full {
+                grid-column: 1 / -1;
+            }
+            .result-item.sell {
+                border-color: rgba(239, 68, 68, 0.35);
+                background: #150d0d;
+            }
+            .result-item.sell .value {
+                color: #fecaca;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+            .records-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .records-table th,
+            .records-table td {
+                padding: 10px 12px;
+                border-bottom: 1px solid var(--border);
+            }
+            .records-table thead th {
+                text-align: left;
+                color: var(--muted);
+                font-weight: 600;
+            }
+            .records-table tbody td {
+                font-size: 14px;
+            }
+            .records-table tbody tr:hover {
+                background: #0b1020;
+            }
+            .records-table .actions-cell {
+                display: flex;
+                gap: 8px;
+            }
+
+            .app-footer {
+                text-align: center;
+                padding: 32px 16px;
+                color: var(--muted);
+            }
+
+            @media (max-width: 960px) {
+                .results {
+                    grid-template-columns: 1fr;
+                }
+                .form-row {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            @media (min-width: 960px) {
+                .card {
+                    grid-column: span 12;
+                }
+            }
+
+            .grid-seq {
+                margin-top: 14px;
+            }
+            .grid-seq-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .grid-cols {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .chip {
+                border: 1px solid var(--border);
+                background: #0a0f1f;
+                color: var(--text);
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-size: 12px;
+            }
+            .chip.up {
+                border-color: rgba(59, 130, 246, 0.4);
+                color: #bfdbfe;
+            }
+            .chip.down {
+                border-color: rgba(239, 68, 68, 0.4);
+                color: #fecaca;
+            }
+
+            .badge {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 999px;
+                font-size: 12px;
+                line-height: 18px;
+            }
+            .badge.buy {
+                background: rgba(34, 197, 94, 0.15);
+                color: #86efac;
+                border: 1px solid rgba(34, 197, 94, 0.35);
+            }
+            .badge.sell {
+                background: rgba(239, 68, 68, 0.1);
+                color: #fecaca;
+                border: 1px solid rgba(239, 68, 68, 0.35);
+            }
+            .dual-forms {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            @media (min-width: 960px) {
+                .dual-forms {
+                    grid-template-columns: 1fr 1fr;
+                }
+            }
+        </style>
     </head>
     <body>
         <header class="app-header">
@@ -397,6 +681,10 @@
                         maximumFractionDigits: decimals,
                     }).format(n);
                 };
+                const roundToTick = (n, tick = 0.01) => {
+                    const t = Number(tick);
+                    return Math.round(Number(n) / t) * t;
+                };
                 const computeAmount = (price, quantity) => {
                     const p = Number(price),
                         q = Number(quantity);
@@ -424,9 +712,9 @@
                 const computeGrid = (base, percent) => {
                     const b = Number(base);
                     const p = Number(percent) / 100;
-                    const up = b * (1 + p);
-                    const down = b * (1 - p);
-                    const diff = Math.abs(up - down);
+                    const up = roundToTick(b * (1 + p));
+                    const down = roundToTick(b * (1 - p));
+                    const diff = roundToTick(Math.abs(up - down));
                     return { up, down, diff };
                 };
 
@@ -741,15 +1029,16 @@
 
                     const renderOutputs = () => {
                         const { up, down, diff } = computeGrid(currentBase, pct);
-                        $("#grid-up").textContent = formatNumber(up, 4);
-                        $("#grid-down").textContent = formatNumber(down, 4);
-                        $("#grid-diff").textContent = formatNumber(diff, 4);
+                        $("#grid-up").textContent = formatNumber(up, 2);
+                        $("#grid-down").textContent = formatNumber(down, 2);
+                        $("#grid-diff").textContent = formatNumber(diff, 2);
                     };
                     const buildSeq = (base, p, n, dir) => {
                         const out = [];
                         let v = Number(base);
                         for (let i = 0; i < n; i++) {
                             v = dir === "up" ? v * (1 + p) : v * (1 - p);
+                            v = roundToTick(v);
                             out.push(v);
                         }
                         return out;
@@ -762,13 +1051,13 @@
                         ups.forEach((v) => {
                             const chip = document.createElement("span");
                             chip.className = "chip up";
-                            chip.textContent = formatNumber(v, 4);
+                            chip.textContent = formatNumber(v, 2);
                             upList.appendChild(chip);
                         });
                         downs.forEach((v) => {
                             const chip = document.createElement("span");
                             chip.className = "chip down";
-                            chip.textContent = formatNumber(v, 4);
+                            chip.textContent = formatNumber(v, 2);
                             downList.appendChild(chip);
                         });
                     };
@@ -796,8 +1085,8 @@
                         currentBase = Number(baseInput.value);
                         pct = Number(percentInput.value);
                         renderSeqs(currentBase, pct / 100);
-                        upLast = currentBase * (1 + pct / 100);
-                        downLast = currentBase * (1 - pct / 100);
+                        upLast = roundToTick(currentBase * (1 + pct / 100));
+                        downLast = roundToTick(currentBase * (1 - pct / 100));
                         renderOutputs();
                     });
                     $("#grid-step-up").addEventListener("click", () => {
@@ -806,13 +1095,13 @@
                             currentBase = Number(baseInput.value);
                             pct = Number(percentInput.value);
                             renderSeqs(currentBase, pct / 100);
-                            upLast = currentBase * (1 + pct / 100);
-                            downLast = currentBase * (1 - pct / 100);
+                            upLast = roundToTick(currentBase * (1 + pct / 100));
+                            downLast = roundToTick(currentBase * (1 - pct / 100));
                         }
-                        upLast = upLast * (1 + Number(percentInput.value) / 100);
+                        upLast = roundToTick(upLast * (1 + Number(percentInput.value) / 100));
                         const chip = document.createElement("span");
                         chip.className = "chip up";
-                        chip.textContent = formatNumber(upLast, 4);
+                        chip.textContent = formatNumber(upLast, 2);
                         upList.appendChild(chip);
                         renderOutputs();
                     });
@@ -822,13 +1111,13 @@
                             currentBase = Number(baseInput.value);
                             pct = Number(percentInput.value);
                             renderSeqs(currentBase, pct / 100);
-                            upLast = currentBase * (1 + pct / 100);
-                            downLast = currentBase * (1 - pct / 100);
+                            upLast = roundToTick(currentBase * (1 + pct / 100));
+                            downLast = roundToTick(currentBase * (1 - pct / 100));
                         }
-                        downLast = downLast * (1 - Number(percentInput.value) / 100);
+                        downLast = roundToTick(downLast * (1 - Number(percentInput.value) / 100));
                         const chip = document.createElement("span");
                         chip.className = "chip down";
-                        chip.textContent = formatNumber(downLast, 4);
+                        chip.textContent = formatNumber(downLast, 2);
                         downList.appendChild(chip);
                         renderOutputs();
                     });
@@ -837,8 +1126,8 @@
                         currentBase = Number(baseInput.value);
                         pct = Number(percentInput.value);
                         renderSeqs(currentBase, pct / 100);
-                        upLast = currentBase * (1 + pct / 100);
-                        downLast = currentBase * (1 - pct / 100);
+                        upLast = roundToTick(currentBase * (1 + pct / 100));
+                        downLast = roundToTick(currentBase * (1 - pct / 100));
                         renderOutputs();
                     });
                 };
