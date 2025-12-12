@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>股票投资计算器</title>
+        <!-- 使用系统字体，无需网络或启动服务 -->
+        <link rel="stylesheet" href="assets/styles.css" />
+    </head>
+    <body>
+        <header class="app-header">
+            <h1>股票投资计算器</h1>
+            <p class="subtitle">成本价计算 · 交易记录 · 网格区间</p>
+        </header>
+
+        <main class="container">
+            <!-- 成本价计算模块 -->
+            <section class="card" aria-labelledby="cost-title">
+                <h2 id="cost-title">买入/卖出记录</h2>
+                <div class="dual-forms">
+                    <form id="cost-form" novalidate>
+                        <div class="form-row">
+                            <label for="price">买入价格</label>
+                            <div class="input-wrap">
+                                <input
+                                    id="price"
+                                    name="price"
+                                    type="number"
+                                    inputmode="decimal"
+                                    step="0.01"
+                                    min="0.0001"
+                                    required
+                                    placeholder="例如：12.35"
+                                    value=""
+                                />
+                                <span class="error" id="price-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="quantity">购买股数</label>
+                            <div class="input-wrap">
+                                <input
+                                    id="quantity"
+                                    name="quantity"
+                                    type="number"
+                                    inputmode="numeric"
+                                    step="1"
+                                    min="1"
+                                    required
+                                    placeholder="例如：100"
+                                    value=""
+                                />
+                                <span class="error" id="quantity-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="buy-commission">买入佣金</label>
+                            <div class="input-wrap">
+                                <input id="buy-commission" type="number" step="0.01" min="0" value="1" required />
+                                <span class="error" id="buy-commission-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="buy-other">买入其他费用</label>
+                            <div class="input-wrap">
+                                <input id="buy-other" type="number" step="0.01" min="0" value="0.06" required />
+                                <span class="error" id="buy-other-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button type="submit" class="btn primary" id="calc-btn">计算并记录</button>
+                            <button type="button" class="btn" id="reset-btn" aria-label="清空输入">重置</button>
+                        </div>
+                    </form>
+                    <form id="sell-form" novalidate>
+                        <div class="form-row">
+                            <label for="sell-price">卖出价格</label>
+                            <div class="input-wrap">
+                                <input
+                                    id="sell-price"
+                                    type="number"
+                                    inputmode="decimal"
+                                    step="0.01"
+                                    min="0.0001"
+                                    required
+                                    placeholder="例如：12.35"
+                                />
+                                <span class="error" id="sell-price-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="sell-quantity">卖出股数</label>
+                            <div class="input-wrap">
+                                <input
+                                    id="sell-quantity"
+                                    type="number"
+                                    inputmode="numeric"
+                                    step="1"
+                                    min="1"
+                                    required
+                                    placeholder="例如：100"
+                                    value=""
+                                />
+                                <span class="error" id="sell-quantity-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="sell-commission">卖出佣金</label>
+                            <div class="input-wrap">
+                                <input id="sell-commission" type="number" step="0.01" min="0" value="1" required />
+                                <span class="error" id="sell-commission-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="sell-stamp">印花税</label>
+                            <div class="input-wrap">
+                                <input id="sell-stamp" type="number" step="0.01" min="0" value="2.54" required />
+                                <span class="error" id="sell-stamp-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="sell-other">其他费用</label>
+                            <div class="input-wrap">
+                                <input id="sell-other" type="number" step="0.01" min="0" value="0.05" required />
+                                <span class="error" id="sell-other-error" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button type="submit" class="btn primary" id="sell-btn">记录卖出</button>
+                            <button type="button" class="btn" id="sell-reset-btn">重置</button>
+                        </div>
+                        <div class="results">
+                            <div class="result-item full sell">
+                                <div class="label">本次卖出金额（预估）</div>
+                                <div class="value" id="current-sell-amount">—</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="results">
+                    <div class="result-item">
+                        <div class="label">当前持仓总成本</div>
+                        <div class="value" id="total-cost">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">平均持仓成本价</div>
+                        <div class="value" id="avg-cost">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">当前持仓股数</div>
+                        <div class="value" id="total-qty">—</div>
+                    </div>
+                    <div class="result-item muted">
+                        <div class="label">本次买入金额（预估）</div>
+                        <div class="value" id="current-amount">—</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 交易记录管理 -->
+            <section class="card" aria-labelledby="records-title">
+                <div class="card-header">
+                    <h2 id="records-title">交易记录</h2>
+                    <div class="card-actions">
+                        <button type="button" class="btn danger-outline" id="clear-records-btn">清空所有记录</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="records-table" aria-describedby="records-title">
+                        <thead>
+                            <tr>
+                                <th scope="col">序号</th>
+                                <th scope="col">类型</th>
+                                <th scope="col">价格</th>
+                                <th scope="col">数量</th>
+                                <th scope="col">金额</th>
+                                <th scope="col">时间戳</th>
+                                <th scope="col">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 网格区间计算器 -->
+            <section class="card" aria-labelledby="grid-title">
+                <h2 id="grid-title">网格区间计算</h2>
+                <form id="grid-form" novalidate>
+                    <div class="form-row">
+                        <label for="base-price">基准价格</label>
+                        <div class="input-wrap">
+                            <input
+                                id="base-price"
+                                name="basePrice"
+                                type="number"
+                                inputmode="decimal"
+                                step="0.01"
+                                min="0.0001"
+                                required
+                                placeholder="例如：12.35"
+                            />
+                            <span class="error" id="base-error" aria-live="polite"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="percent">百分比（%）</label>
+                        <div class="input-wrap">
+                            <input
+                                id="percent"
+                                name="percent"
+                                type="number"
+                                inputmode="decimal"
+                                step="0.01"
+                                min="0.01"
+                                value="2"
+                                required
+                            />
+                            <span class="error" id="percent-error" aria-live="polite"></span>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn primary" id="grid-btn">计算网格区间</button>
+                        <button type="button" class="btn" id="grid-step-up">向上一步</button>
+                        <button type="button" class="btn" id="grid-step-down">向下一步</button>
+                        <button type="button" class="btn" id="grid-reset">重置序列</button>
+                    </div>
+                </form>
+
+                <div class="results">
+                    <div class="result-item">
+                        <div class="label">向上网格价位</div>
+                        <div class="value" id="grid-up">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">向下网格价位</div>
+                        <div class="value" id="grid-down">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">价格差绝对值</div>
+                        <div class="value" id="grid-diff">—</div>
+                    </div>
+                </div>
+                <div class="grid-seq">
+                    <div class="grid-cols">
+                        <div>
+                            <div class="label">向上档位（10档）</div>
+                            <div class="grid-seq-list" id="grid-up-list"></div>
+                        </div>
+                        <div>
+                            <div class="label">向下档位（10档）</div>
+                            <div class="grid-seq-list" id="grid-down-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="t-title">
+                <h2 id="t-title">做T收益计算</h2>
+                <div class="results">
+                    <div class="result-item">
+                        <div class="label">初始持仓股数</div>
+                        <div class="value" id="t-initial-qty">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">初始平均成本价</div>
+                        <div class="value" id="t-initial-avg">—</div>
+                    </div>
+                </div>
+                <form id="t-form" novalidate>
+                    <div class="form-row">
+                        <label>操作类型</label>
+                        <div class="input-wrap">
+                            <div class="actions">
+                                <label><input type="radio" name="tType" value="sell-first" checked /> 先卖后买</label>
+                                <label><input type="radio" name="tType" value="buy-first" /> 先买后卖</label>
+                            </div>
+                            <span class="error" id="t-type-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-sell-price">卖出价</label>
+                        <div class="input-wrap">
+                            <input id="t-sell-price" type="number" step="0.01" min="0.0001" required value="" />
+                            <span class="error" id="t-sell-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-buy-price">回补价</label>
+                        <div class="input-wrap">
+                            <input id="t-buy-price" type="number" step="0.01" min="0.0001" required value="" />
+                            <span class="error" id="t-buy-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-qty">操作股数</label>
+                        <div class="input-wrap">
+                            <input id="t-qty" type="number" step="1" min="1" required value="" />
+                            <span class="error" id="t-qty-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-sell-commission">卖出佣金</label>
+                        <div class="input-wrap">
+                            <input id="t-sell-commission" type="number" step="0.01" min="0" value="1" required />
+                            <span class="error" id="t-sell-commission-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-sell-stamp">印花税</label>
+                        <div class="input-wrap">
+                            <input id="t-sell-stamp" type="number" step="0.01" min="0" value="2.54" required />
+                            <span class="error" id="t-sell-stamp-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-sell-other">卖出其他费用</label>
+                        <div class="input-wrap">
+                            <input id="t-sell-other" type="number" step="0.01" min="0" value="0.05" required />
+                            <span class="error" id="t-sell-other-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-buy-commission">买入佣金</label>
+                        <div class="input-wrap">
+                            <input id="t-buy-commission" type="number" step="0.01" min="0" value="1" required />
+                            <span class="error" id="t-buy-commission-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="t-buy-other">买入其他费用</label>
+                        <div class="input-wrap">
+                            <input id="t-buy-other" type="number" step="0.01" min="0" value="0.06" required />
+                            <span class="error" id="t-buy-other-error"></span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" class="btn primary" id="t-btn">计算做T收益</button>
+                    </div>
+                </form>
+                <div class="results">
+                    <div class="result-item">
+                        <div class="label">本次做T预估收益</div>
+                        <div class="value" id="t-profit">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">做T后平均成本价</div>
+                        <div class="value" id="t-new-avg">—</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">做T后总持仓成本</div>
+                        <div class="value" id="t-new-total">—</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <small>© 2025 投资小工具 · 本地存储·纯前端实现</small>
+        </footer>
+
+        <script>
+            // 为 file:// 环境准备：不使用 ES 模块，全部内联
+            (function () {
+                // 工具与计算
+                const isPositiveNumber = (v) => {
+                    const n = Number(v);
+                    return Number.isFinite(n) && n > 0;
+                };
+                const isPositiveInteger = (v) => {
+                    const n = Number(v);
+                    return Number.isInteger(n) && n > 0;
+                };
+                const isNonNegativeNumber = (v) => {
+                    const n = Number(v);
+                    return Number.isFinite(n) && n >= 0;
+                };
+                const formatCurrency = (n) => {
+                    if (!Number.isFinite(n)) return "—";
+                    return new Intl.NumberFormat("zh-CN", {
+                        style: "currency",
+                        currency: "CNY",
+                        minimumFractionDigits: 2,
+                    }).format(n);
+                };
+                const formatNumber = (n, decimals = 2) => {
+                    if (!Number.isFinite(n)) return "—";
+                    return new Intl.NumberFormat("zh-CN", {
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals,
+                    }).format(n);
+                };
+                const computeAmount = (price, quantity) => {
+                    const p = Number(price),
+                        q = Number(quantity);
+                    return p * q;
+                };
+                const computePortfolio = (records) => {
+                    const ordered = [...records].sort((a, b) => a.timestamp - b.timestamp);
+                    let totalQty = 0;
+                    let buyAmount = 0;
+                    let sellAmount = 0;
+                    for (const r of ordered) {
+                        const q = Number(r.quantity);
+                        if (r.type === "sell") {
+                            totalQty -= q;
+                            sellAmount += Number(r.amount);
+                        } else {
+                            totalQty += q;
+                            buyAmount += Number(r.amount);
+                        }
+                    }
+                    const totalAmount = buyAmount - sellAmount;
+                    const avgCost = totalQty > 0 ? totalAmount / totalQty : NaN;
+                    return { totalQty, totalAmount, avgCost };
+                };
+                const computeGrid = (base, percent) => {
+                    const b = Number(base);
+                    const p = Number(percent) / 100;
+                    const up = b * (1 + p);
+                    const down = b * (1 - p);
+                    const diff = Math.abs(up - down);
+                    return { up, down, diff };
+                };
+
+                // 存储
+                const STORAGE_KEY = "stock_calculator_records";
+                const safeJSONParse = (text) => {
+                    try {
+                        return JSON.parse(text);
+                    } catch {
+                        return [];
+                    }
+                };
+                const loadRecords = () => {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    let parsed;
+                    try {
+                        parsed = raw ? JSON.parse(raw) : [];
+                    } catch {
+                        parsed = [];
+                    }
+                    const arr = Array.isArray(parsed) ? parsed : [];
+                    const normalized = arr.map((r) => ({
+                        id: r.id,
+                        price: Number(r.price),
+                        quantity: Number(r.quantity),
+                        amount: Number(r.amount),
+                        timestamp: Number(r.timestamp),
+                        type: r.type === "sell" ? "sell" : "buy",
+                    }));
+                    return normalized.sort((a, b) => b.timestamp - a.timestamp);
+                };
+                const saveRecords = (records) => {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                };
+                const addRecord = (record) => {
+                    const current = loadRecords();
+                    const id =
+                        typeof crypto !== "undefined" && crypto.randomUUID
+                            ? crypto.randomUUID()
+                            : String(Date.now()) + "-" + Math.random().toString(16).slice(2);
+                    const next = [{ ...record, id }, ...current];
+                    saveRecords(next);
+                    return next;
+                };
+                const deleteRecord = (id) => {
+                    const current = loadRecords();
+                    const next = current.filter((r) => r.id !== id);
+                    saveRecords(next);
+                    return next;
+                };
+                const clearRecords = () => {
+                    saveRecords([]);
+                    return [];
+                };
+
+                // UI 与交互
+                const $ = (sel) => document.querySelector(sel);
+                const showError = (el, msg) => {
+                    if (el) el.textContent = msg || "";
+                };
+                const renderRecords = (records) => {
+                    const tbody = $("#records-tbody");
+                    tbody.innerHTML = "";
+                    records.forEach((r, idx) => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${idx + 1}</td>
+                            <td><span class="badge ${r.type}">${r.type === "sell" ? "卖出" : "买入"}</span></td>
+                            <td>${formatNumber(r.price, 2)}</td>
+                            <td>${r.quantity}</td>
+                            <td>${formatCurrency(r.amount)}</td>
+                            <td>${new Date(r.timestamp).toLocaleString("zh-CN")}</td>
+                            <td class="actions-cell">
+                                <button type="button" class="btn danger" data-action="delete" data-id="${
+                                    r.id
+                                }">删除</button>
+                            </td>`;
+                        tbody.appendChild(tr);
+                    });
+                };
+                const renderSummary = (records) => {
+                    const { totalQty, totalAmount, avgCost } = computePortfolio(records);
+                    $("#total-cost").textContent = formatCurrency(totalAmount);
+                    $("#avg-cost").textContent = Number.isFinite(avgCost) ? formatNumber(avgCost, 4) : "—";
+                    $("#total-qty").textContent = totalQty || 0;
+                };
+                const bindRecordEvents = () => {
+                    const tbody = $("#records-tbody");
+                    tbody.addEventListener("click", (e) => {
+                        const target = e.target;
+                        if (target instanceof HTMLElement && target.dataset.action === "delete") {
+                            const id = target.dataset.id;
+                            const next = deleteRecord(id);
+                            renderRecords(next);
+                            renderSummary(next);
+                            updateTInitial();
+                        }
+                    });
+                    $("#clear-records-btn").addEventListener("click", () => {
+                        const ok = confirm("确认清空所有交易记录？此操作不可恢复");
+                        if (!ok) return;
+                        const next = clearRecords();
+                        renderRecords(next);
+                        renderSummary(next);
+                        updateTInitial();
+                    });
+                };
+                const initCostModule = () => {
+                    const form = $("#cost-form");
+                    const priceInput = $("#price");
+                    const qtyInput = $("#quantity");
+                    const priceErr = $("#price-error");
+                    const qtyErr = $("#quantity-error");
+                    const buyComInput = document.querySelector("#buy-commission");
+                    const buyOtherInput = document.querySelector("#buy-other");
+                    const buyComErr = document.querySelector("#buy-commission-error");
+                    const buyOtherErr = document.querySelector("#buy-other-error");
+                    const updateCurrentAmount = () => {
+                        const price = priceInput.value;
+                        const qty = qtyInput.value;
+                        if (
+                            isPositiveNumber(price) &&
+                            isPositiveInteger(qty) &&
+                            isNonNegativeNumber(buyComInput.value) &&
+                            isNonNegativeNumber(buyOtherInput.value)
+                        ) {
+                            const fees = Number(buyComInput.value || 0) + Number(buyOtherInput.value || 0);
+                            $("#current-amount").textContent = formatCurrency(computeAmount(price, qty) + fees);
+                        } else {
+                            $("#current-amount").textContent = "—";
+                        }
+                    };
+                    const validateInputs = () => {
+                        let ok = true;
+                        if (!isPositiveNumber(priceInput.value)) {
+                            ok = false;
+                            showError(priceErr, "请输入大于0的价格");
+                        } else {
+                            showError(priceErr, "");
+                        }
+                        if (!isPositiveInteger(qtyInput.value)) {
+                            ok = false;
+                            showError(qtyErr, "请输入大于0的整数股数");
+                        } else {
+                            showError(qtyErr, "");
+                        }
+                        if (!isNonNegativeNumber(buyComInput.value)) {
+                            ok = false;
+                            showError(buyComErr, "佣金必须≥0");
+                        } else {
+                            showError(buyComErr, "");
+                        }
+                        if (!isNonNegativeNumber(buyOtherInput.value)) {
+                            ok = false;
+                            showError(buyOtherErr, "其他费用必须≥0");
+                        } else {
+                            showError(buyOtherErr, "");
+                        }
+                        return ok;
+                    };
+                    priceInput.addEventListener("input", updateCurrentAmount);
+                    qtyInput.addEventListener("input", updateCurrentAmount);
+                    buyComInput.addEventListener("input", updateCurrentAmount);
+                    buyOtherInput.addEventListener("input", updateCurrentAmount);
+                    form.addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        try {
+                            if (!validateInputs()) return;
+                            const price = Number(priceInput.value);
+                            const quantity = Number(qtyInput.value);
+                            const fees = Number(buyComInput.value || 0) + Number(buyOtherInput.value || 0);
+                            const amount = computeAmount(price, quantity) + fees;
+                            const timestamp = Date.now();
+                            const next = addRecord({ price, quantity, amount, timestamp, type: "buy" });
+                            renderRecords(next);
+                            renderSummary(next);
+                            updateCurrentAmount();
+                            form.reset();
+                            buyComInput.value = "1";
+                            buyOtherInput.value = "0.06";
+                        } catch (err) {
+                            alert("计算或记录过程中发生错误，请重试。");
+                            console.error(err);
+                        }
+                    });
+                    $("#reset-btn").addEventListener("click", () => {
+                        form.reset();
+                        updateCurrentAmount();
+                        buyComInput.value = "1";
+                        buyOtherInput.value = "0.06";
+                    });
+                    updateCurrentAmount();
+                };
+                const initSellModule = () => {
+                    const form = document.querySelector("#sell-form");
+                    const priceInput = document.querySelector("#sell-price");
+                    const qtyInput = document.querySelector("#sell-quantity");
+                    const priceErr = document.querySelector("#sell-price-error");
+                    const qtyErr = document.querySelector("#sell-quantity-error");
+                    const sellComInput = document.querySelector("#sell-commission");
+                    const sellStampInput = document.querySelector("#sell-stamp");
+                    const sellOtherInput = document.querySelector("#sell-other");
+                    const sellComErr = document.querySelector("#sell-commission-error");
+                    const sellStampErr = document.querySelector("#sell-stamp-error");
+                    const sellOtherErr = document.querySelector("#sell-other-error");
+                    const updateAmount = () => {
+                        const price = priceInput.value;
+                        const qty = qtyInput.value;
+                        if (
+                            isPositiveNumber(price) &&
+                            isPositiveInteger(qty) &&
+                            isNonNegativeNumber(sellComInput.value) &&
+                            isNonNegativeNumber(sellStampInput.value) &&
+                            isNonNegativeNumber(sellOtherInput.value)
+                        ) {
+                            const fees =
+                                Number(sellComInput.value || 0) +
+                                Number(sellStampInput.value || 0) +
+                                Number(sellOtherInput.value || 0);
+                            document.querySelector("#current-sell-amount").textContent = formatCurrency(
+                                computeAmount(price, qty) - fees
+                            );
+                        } else {
+                            document.querySelector("#current-sell-amount").textContent = "—";
+                        }
+                    };
+                    const validate = () => {
+                        let ok = true;
+                        if (!isPositiveNumber(priceInput.value)) {
+                            ok = false;
+                            showError(priceErr, "请输入大于0的价格");
+                        } else {
+                            showError(priceErr, "");
+                        }
+                        if (!isPositiveInteger(qtyInput.value)) {
+                            ok = false;
+                            showError(qtyErr, "请输入大于0的整数股数");
+                        } else {
+                            showError(qtyErr, "");
+                        }
+                        const qty = Number(qtyInput.value);
+                        const pos = computePortfolio(loadRecords());
+                        if (qty > pos.totalQty) {
+                            ok = false;
+                            showError(qtyErr, "卖出股数不能超过持仓");
+                        }
+                        if (!isNonNegativeNumber(sellComInput.value)) {
+                            ok = false;
+                            showError(sellComErr, "佣金必须≥0");
+                        } else {
+                            showError(sellComErr, "");
+                        }
+                        if (!isNonNegativeNumber(sellStampInput.value)) {
+                            ok = false;
+                            showError(sellStampErr, "印花税必须≥0");
+                        } else {
+                            showError(sellStampErr, "");
+                        }
+                        if (!isNonNegativeNumber(sellOtherInput.value)) {
+                            ok = false;
+                            showError(sellOtherErr, "其他费用必须≥0");
+                        } else {
+                            showError(sellOtherErr, "");
+                        }
+                        return ok;
+                    };
+                    priceInput.addEventListener("input", updateAmount);
+                    qtyInput.addEventListener("input", updateAmount);
+                    sellComInput.addEventListener("input", updateAmount);
+                    sellStampInput.addEventListener("input", updateAmount);
+                    sellOtherInput.addEventListener("input", updateAmount);
+                    form.addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        if (!validate()) return;
+                        const price = Number(priceInput.value);
+                        const quantity = Number(qtyInput.value);
+                        const fees =
+                            Number(sellComInput.value || 0) +
+                            Number(sellStampInput.value || 0) +
+                            Number(sellOtherInput.value || 0);
+                        const amount = computeAmount(price, quantity) - fees;
+                        const timestamp = Date.now();
+                        const next = addRecord({ price, quantity, amount, timestamp, type: "sell" });
+                        renderRecords(next);
+                        renderSummary(next);
+                        updateAmount();
+                        form.reset();
+                        sellComInput.value = "1";
+                        sellStampInput.value = "2.54";
+                        sellOtherInput.value = "0.05";
+                        updateTInitial();
+                    });
+                    document.querySelector("#sell-reset-btn").addEventListener("click", () => {
+                        form.reset();
+                        updateAmount();
+                        sellComInput.value = "1";
+                        sellStampInput.value = "2.54";
+                        sellOtherInput.value = "0.05";
+                    });
+                    updateAmount();
+                };
+                const initGridModule = () => {
+                    const form = $("#grid-form");
+                    const baseInput = $("#base-price");
+                    const percentInput = $("#percent");
+                    const baseErr = $("#base-error");
+                    const percentErr = $("#percent-error");
+                    const upList = $("#grid-up-list");
+                    const downList = $("#grid-down-list");
+                    let currentBase = NaN;
+                    let pct = NaN;
+
+                    const renderOutputs = () => {
+                        const { up, down, diff } = computeGrid(currentBase, pct);
+                        $("#grid-up").textContent = formatNumber(up, 4);
+                        $("#grid-down").textContent = formatNumber(down, 4);
+                        $("#grid-diff").textContent = formatNumber(diff, 4);
+                    };
+                    const buildSeq = (base, p, n, dir) => {
+                        const out = [];
+                        let v = Number(base);
+                        for (let i = 0; i < n; i++) {
+                            v = dir === "up" ? v * (1 + p) : v * (1 - p);
+                            out.push(v);
+                        }
+                        return out;
+                    };
+                    const renderSeqs = (base, p) => {
+                        upList.innerHTML = "";
+                        downList.innerHTML = "";
+                        const ups = buildSeq(base, p, 10, "up");
+                        const downs = buildSeq(base, p, 10, "down");
+                        ups.forEach((v) => {
+                            const chip = document.createElement("span");
+                            chip.className = "chip up";
+                            chip.textContent = formatNumber(v, 4);
+                            upList.appendChild(chip);
+                        });
+                        downs.forEach((v) => {
+                            const chip = document.createElement("span");
+                            chip.className = "chip down";
+                            chip.textContent = formatNumber(v, 4);
+                            downList.appendChild(chip);
+                        });
+                    };
+                    let upLast = NaN;
+                    let downLast = NaN;
+                    const validate = () => {
+                        let ok = true;
+                        if (!isPositiveNumber(baseInput.value)) {
+                            ok = false;
+                            showError(baseErr, "请输入有效的基准价格");
+                        } else {
+                            showError(baseErr, "");
+                        }
+                        if (!isPositiveNumber(percentInput.value)) {
+                            ok = false;
+                            showError(percentErr, "请输入有效的百分比");
+                        } else {
+                            showError(percentErr, "");
+                        }
+                        return ok;
+                    };
+                    form.addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        if (!validate()) return;
+                        currentBase = Number(baseInput.value);
+                        pct = Number(percentInput.value);
+                        renderSeqs(currentBase, pct / 100);
+                        upLast = currentBase * (1 + pct / 100);
+                        downLast = currentBase * (1 - pct / 100);
+                        renderOutputs();
+                    });
+                    $("#grid-step-up").addEventListener("click", () => {
+                        if (!validate()) return;
+                        if (!Number.isFinite(currentBase)) {
+                            currentBase = Number(baseInput.value);
+                            pct = Number(percentInput.value);
+                            renderSeqs(currentBase, pct / 100);
+                            upLast = currentBase * (1 + pct / 100);
+                            downLast = currentBase * (1 - pct / 100);
+                        }
+                        upLast = upLast * (1 + Number(percentInput.value) / 100);
+                        const chip = document.createElement("span");
+                        chip.className = "chip up";
+                        chip.textContent = formatNumber(upLast, 4);
+                        upList.appendChild(chip);
+                        renderOutputs();
+                    });
+                    $("#grid-step-down").addEventListener("click", () => {
+                        if (!validate()) return;
+                        if (!Number.isFinite(currentBase)) {
+                            currentBase = Number(baseInput.value);
+                            pct = Number(percentInput.value);
+                            renderSeqs(currentBase, pct / 100);
+                            upLast = currentBase * (1 + pct / 100);
+                            downLast = currentBase * (1 - pct / 100);
+                        }
+                        downLast = downLast * (1 - Number(percentInput.value) / 100);
+                        const chip = document.createElement("span");
+                        chip.className = "chip down";
+                        chip.textContent = formatNumber(downLast, 4);
+                        downList.appendChild(chip);
+                        renderOutputs();
+                    });
+                    $("#grid-reset").addEventListener("click", () => {
+                        if (!validate()) return;
+                        currentBase = Number(baseInput.value);
+                        pct = Number(percentInput.value);
+                        renderSeqs(currentBase, pct / 100);
+                        upLast = currentBase * (1 + pct / 100);
+                        downLast = currentBase * (1 - pct / 100);
+                        renderOutputs();
+                    });
+                };
+                const updateTInitial = () => {
+                    const initial = computePortfolio(loadRecords());
+                    $("#t-initial-qty").textContent = initial.totalQty || 0;
+                    $("#t-initial-avg").textContent = Number.isFinite(initial.avgCost)
+                        ? formatNumber(initial.avgCost, 4)
+                        : "—";
+                };
+                const initTModule = () => {
+                    updateTInitial();
+
+                    const form = $("#t-form");
+                    const sellInput = $("#t-sell-price");
+                    const buyInput = $("#t-buy-price");
+                    const qtyInput = $("#t-qty");
+                    const tSellCom = document.querySelector("#t-sell-commission");
+                    const tSellStamp = document.querySelector("#t-sell-stamp");
+                    const tSellOther = document.querySelector("#t-sell-other");
+                    const tBuyCom = document.querySelector("#t-buy-commission");
+                    const tBuyOther = document.querySelector("#t-buy-other");
+                    const typeInputs = Array.from(document.querySelectorAll('input[name="tType"]'));
+                    const errSell = $("#t-sell-error");
+                    const errBuy = $("#t-buy-error");
+                    const errQty = $("#t-qty-error");
+                    const errTSellCom = document.querySelector("#t-sell-commission-error");
+                    const errTSellStamp = document.querySelector("#t-sell-stamp-error");
+                    const errTSellOther = document.querySelector("#t-sell-other-error");
+                    const errTBuyCom = document.querySelector("#t-buy-commission-error");
+                    const errTBuyOther = document.querySelector("#t-buy-other-error");
+
+                    const validate = () => {
+                        let ok = true;
+                        if (!isPositiveNumber(sellInput.value)) {
+                            ok = false;
+                            showError(errSell, "请输入有效卖出价");
+                        } else {
+                            showError(errSell, "");
+                        }
+                        if (!isPositiveNumber(buyInput.value)) {
+                            ok = false;
+                            showError(errBuy, "请输入有效回补价");
+                        } else {
+                            showError(errBuy, "");
+                        }
+                        if (!isPositiveInteger(qtyInput.value)) {
+                            ok = false;
+                            showError(errQty, "请输入有效股数");
+                        } else {
+                            showError(errQty, "");
+                        }
+                        if (!isNonNegativeNumber(tSellCom.value)) {
+                            ok = false;
+                            showError(errTSellCom, "卖出佣金必须≥0");
+                        } else {
+                            showError(errTSellCom, "");
+                        }
+                        if (!isNonNegativeNumber(tSellStamp.value)) {
+                            ok = false;
+                            showError(errTSellStamp, "印花税必须≥0");
+                        } else {
+                            showError(errTSellStamp, "");
+                        }
+                        if (!isNonNegativeNumber(tSellOther.value)) {
+                            ok = false;
+                            showError(errTSellOther, "其他费用必须≥0");
+                        } else {
+                            showError(errTSellOther, "");
+                        }
+                        if (!isNonNegativeNumber(tBuyCom.value)) {
+                            ok = false;
+                            showError(errTBuyCom, "买入佣金必须≥0");
+                        } else {
+                            showError(errTBuyCom, "");
+                        }
+                        if (!isNonNegativeNumber(tBuyOther.value)) {
+                            ok = false;
+                            showError(errTBuyOther, "其他费用必须≥0");
+                        } else {
+                            showError(errTBuyOther, "");
+                        }
+                        const qty = Number(qtyInput.value);
+                        const type = typeInputs.find((i) => i.checked)?.value || "sell-first";
+                        const current = computePortfolio(loadRecords());
+                        if (type === "sell-first" && qty > current.totalQty) {
+                            ok = false;
+                            showError(errQty, "卖出股数不能超过持仓");
+                        }
+                        return ok;
+                    };
+
+                    form.addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        if (!validate()) return;
+                        const initial = computePortfolio(loadRecords());
+                        const qty = Number(qtyInput.value);
+                        const sellP = Number(sellInput.value);
+                        const buyP = Number(buyInput.value);
+                        const type = typeInputs.find((i) => i.checked)?.value || "sell-first";
+                        const Fsell =
+                            Number(tSellCom.value || 0) + Number(tSellStamp.value || 0) + Number(tSellOther.value || 0);
+                        const Fbuy = Number(tBuyCom.value || 0) + Number(tBuyOther.value || 0);
+
+                        const Q0 = initial.totalQty;
+                        const A0 = initial.totalAmount;
+                        let profit = sellP * qty - Fsell - (buyP * qty + Fbuy);
+                        if (Q0 <= 0 || !Number.isFinite(A0)) {
+                            alert("请先在上方记录至少一笔买入，以计算做T。");
+                            return;
+                        }
+                        const newTotal = A0 + (buyP * qty + Fbuy) - (sellP * qty - Fsell);
+                        const newAvg = Q0 > 0 ? newTotal / Q0 : NaN;
+
+                        $("#t-profit").textContent = formatCurrency(profit);
+                        $("#t-new-avg").textContent = Number.isFinite(newAvg) ? formatNumber(newAvg, 4) : "—";
+                        $("#t-new-total").textContent = formatCurrency(newTotal);
+                        updateTInitial();
+                    });
+                };
+
+                const initUI = () => {
+                    const records = loadRecords();
+                    renderRecords(records);
+                    renderSummary(records);
+                    bindRecordEvents();
+                    initCostModule();
+                    initSellModule();
+                    initGridModule();
+                    initTModule();
+                };
+
+                document.addEventListener("DOMContentLoaded", () => {
+                    initUI();
+                });
+            })();
+        </script>
+    </body>
+</html>
